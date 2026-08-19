@@ -61,7 +61,8 @@ export function Header({
         {t.skipToContent}
       </a>
 
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-5 sm:h-20 sm:px-8">
+      {/* Height is tied to the brand lockup — see the note in Logo.tsx. */}
+      <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between gap-4 px-5 sm:h-24 sm:px-8">
         <Link
           href={`/${locale}`}
           className="rounded-md focus-visible:ring-2 focus-visible:ring-accent-400"
@@ -117,7 +118,7 @@ export function Header({
       {open ? (
         <div
           id="mobile-menu"
-          className="fixed inset-x-0 top-16 z-40 border-t border-ink-100 bg-paper pb-8 shadow-lg lg:hidden"
+          className="fixed inset-x-0 top-20 z-40 border-t border-ink-100 bg-paper pb-8 shadow-lg lg:hidden"
         >
           <nav
             aria-label="Mobile"

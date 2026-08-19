@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Dictionary } from "@/lib/i18n/types";
 import type { Locale } from "@/lib/i18n";
 import { addressOneLine, business, whatsappLink } from "@/lib/business";
-import { Logo } from "./Logo";
+import { LogoBadge } from "./Logo";
 import { WhatsAppLink } from "./WhatsAppLink";
 import { PhoneLink } from "./PhoneLink";
 import { Instagram, MapPin, MessageCircle, Phone } from "./icons";
@@ -30,7 +30,7 @@ export function Footer({
     <footer className="bg-brand-900 text-brand-100">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-14 sm:px-8 sm:py-16 md:grid-cols-4">
         <div className="md:col-span-2">
-          <Logo tone="light" className="h-16 w-auto rounded-2xl" />
+          <LogoBadge className="h-20 w-20" />
           <p className="mt-5 max-w-xs text-sm text-brand-200">
             <MapPin className="mr-1.5 inline h-4 w-4 align-[-2px]" aria-hidden="true" />
             {addressOneLine()}
