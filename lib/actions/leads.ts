@@ -8,7 +8,7 @@ import {
 } from "@/lib/sheets";
 
 export type LeadResult =
-  | { ok: true; code: string; returning: boolean }
+  | { ok: true; code: string; returning: boolean; stored: boolean }
   | { ok: false; error: "validation" | "age" | "config" | "delivery" };
 
 const SOURCES = ["section", "modal"] as const;
@@ -150,5 +150,5 @@ export async function submitLead(formData: FormData): Promise<LeadResult> {
     );
   }
 
-  return { ok: true, code, returning };
+  return { ok: true, code, returning, stored };
 }

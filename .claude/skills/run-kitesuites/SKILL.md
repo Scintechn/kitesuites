@@ -316,6 +316,18 @@ returns `{ok:false,error:"config"}` and logs `[leads] Missing GOOGLE_...` —
 `driver.mjs lead` treats that as a pass, the same way `form` handles missing
 Telegram vars.
 
+Setup gotchas, both of which cost time here:
+
+- **A service account, not an API key.** Both live under "Credentials" and the
+  console will happily restrict an API key to the Sheets API — but an API key
+  can only read *public* sheets and can never write. You need
+  `client_email` + `private_key` from the service account's downloaded JSON.
+  `lib/sheets.ts` now detects the wrong shape and says so.
+- **Share the spreadsheet with the service-account address as Editor**, and
+  name the tab exactly `Leads`. Not sharing gives a 403 that looks like a bad
+  key; a wrong tab name gives `Unable to parse range: Leads!A:I`. A wrong
+  spreadsheet id gives 404 — so 403 means "exists, not shared".
+
 **The sheet is never allowed to cost a lead.** If the Sheets write throws, the
 visitor still gets their code and the Telegram alert is prefixed
 `⚠️ NÃO gravado na planilha` so it can be entered by hand.

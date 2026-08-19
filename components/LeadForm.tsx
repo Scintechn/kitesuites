@@ -39,6 +39,7 @@ export function LeadForm({
   const [serverError, setServerError] = useState<"generic" | "age" | null>(null);
   const [code, setCode] = useState("");
   const [returning, setReturning] = useState(false);
+  const [stored, setStored] = useState(true);
   const [copied, setCopied] = useState(false);
   const startedAt = useRef(0);
 
@@ -85,6 +86,7 @@ export function LeadForm({
     if (result.ok) {
       setCode(result.code);
       setReturning(result.returning);
+      setStored(result.stored);
       setStatus("success");
       track("lead_submit", { source, returning: result.returning });
       onSuccess?.();
@@ -104,6 +106,9 @@ export function LeadForm({
       <div
         role="status"
         data-testid="lead-success"
+        // Not user-facing: lets the driver tell a real sheet write from the
+        // Telegram-only fallback, which otherwise look identical on screen.
+        data-stored={String(stored)}
         className="rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-900 sm:p-8"
       >
         <Gift className="h-8 w-8 text-emerald-600" aria-hidden="true" />

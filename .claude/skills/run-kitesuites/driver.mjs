@@ -526,8 +526,22 @@ async function lead(browser) {
 
   if ((await section.getByTestId("lead-success").count()) > 0) {
     const code = (await section.getByTestId("lead-code").textContent())?.trim();
-    pass(`lead accepted, gift code issued: ${code}`);
+    const stored = await section.getByTestId("lead-success").getAttribute("data-stored");
     await section.screenshot({ path: path.join(OUT, "gift-success.png") });
+
+    if (stored === "false") {
+      // The visitor sees success either way — that is deliberate. But a lead
+      // that never reached the spreadsheet is a silent data-loss bug, so the
+      // driver must not treat it as a pass.
+      fail(
+        `lead accepted (code ${code}) but the Sheets write FAILED — the row is ` +
+          `not in the spreadsheet. Almost always: the sheet has not been shared ` +
+          `with GOOGLE_SERVICE_ACCOUNT_EMAIL as Editor (403). Check the server ` +
+          `log for "[leads] Sheets write failed".`,
+      );
+    } else {
+      pass(`lead stored in the sheet, gift code issued: ${code}`);
+    }
   } else {
     const msg = (await form.getByTestId("lead-error").textContent())?.trim();
     notes.push(

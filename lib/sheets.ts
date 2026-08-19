@@ -40,6 +40,28 @@ function credentials(): Creds | null {
   const key = process.env.GOOGLE_PRIVATE_KEY;
   const sheetId = process.env.LEADS_SHEET_ID;
   if (!email || !key || !sheetId) return null;
+
+  // Guard against the easy mistake: creating an API key (AIza…) instead of a
+  // service account. An API key can only read *public* Sheets and can never
+  // write, so an append would fail with an opaque 401 much later. Say so here.
+  if (!email.endsWith(".iam.gserviceaccount.com")) {
+    console.error(
+      "[sheets] GOOGLE_SERVICE_ACCOUNT_EMAIL is not a service account address " +
+        "(expected something ending in .iam.gserviceaccount.com). Use the " +
+        "`client_email` field from the service account JSON key file.",
+    );
+    return null;
+  }
+  if (!key.includes("BEGIN PRIVATE KEY")) {
+    console.error(
+      "[sheets] GOOGLE_PRIVATE_KEY does not look like a PEM key. Use the " +
+        "`private_key` field from the service account JSON (it starts with " +
+        "-----BEGIN PRIVATE KEY-----). An API key (AIza…) or a private_key_id " +
+        "will not work: API keys cannot write to Sheets at all.",
+    );
+    return null;
+  }
+
   // Dashboards and .env files carry the PEM with literal \n escapes.
   return { email, key: key.replace(/\\n/g, "\n"), sheetId };
 }
