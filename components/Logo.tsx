@@ -9,12 +9,13 @@ type Tone = "dark" | "light";
  * re-arranging of the stacked kite / KITE / SUITES / PRAIA SECA · RJ.
  *
  * Because the artwork is a *square stacked* lockup, its wordmark is only ever
- * about a third of the rendered height. The header therefore has to be tall
- * enough for it to read: `Header.tsx` runs h-20 / sm:h-24 so this can sit at
- * h-16 / sm:h-20. Shrinking the header shrinks the brand — keep them in step.
+ * about a third of the rendered height, so it needs real size to read. The
+ * header solves that with a circular medallion that overhangs the header's
+ * bottom edge (see `Header.tsx`), giving the mark far more room than the
+ * header bar itself has. Logo size and medallion size move together.
  *
- * The source PNG is 250×250, so h-20 (80 CSS px) still has enough pixels for
- * a 2× display. Don't render it larger than ~h-28 or it will soften.
+ * The source PNG is 250×250, so h-24 (96 CSS px) is the practical ceiling:
+ * that needs 192px on a 2× display. Larger and it will visibly soften.
  *
  * `dark`  — the teal-on-transparent stack, for light backgrounds.
  * `light` — the round badge on teal, for dark backgrounds (footer).
@@ -36,7 +37,11 @@ export function Logo({
       height={250}
       priority
       className={cn(
-        isDark ? "h-16 w-auto sm:h-20" : "h-20 w-20 rounded-full",
+        // The dark lockup is sized as a share of its container so the header
+        // medallion can grow and shrink and the mark follows. That means its
+        // parent must have a definite height — it always does (the medallion
+        // is a fixed-size circle).
+        isDark ? "h-[72%] w-auto" : "h-20 w-20 rounded-full",
         className,
       )}
     />

@@ -63,10 +63,31 @@ export function Header({
 
       {/* Height is tied to the brand lockup — see the note in Logo.tsx. */}
       <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between gap-4 px-5 sm:h-24 sm:px-8">
+        {/*
+          Brand medallion. The circle is taller than the header bar and the
+          negative bottom margin pulls its layout box up, so roughly a third
+          of it hangs *below* the header onto the page — which is the only way
+          the square stacked lockup gets enough room to be readable.
+
+          It retracts into the bar once the page scrolls: at full size it sits
+          permanently over the top-left of the content, which is fine against
+          the hero but covers body copy further down. Shrinking on scroll
+          keeps the effect at rest and gets it out of the way in use.
+
+          z-50 (not the default) so it still paints over the open mobile menu
+          panel, which is z-40 inside this same stacking context. Nothing in
+          the header's ancestry may set `overflow-hidden` or the overhang gets
+          clipped away.
+        */}
         <Link
           href={`/${locale}`}
-          className="rounded-md focus-visible:ring-2 focus-visible:ring-accent-400"
           aria-label={business.brandName}
+          className={cn(
+            "relative z-50 flex shrink-0 items-center justify-center rounded-full bg-paper ring-1 ring-ink-100 transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400",
+            scrolled
+              ? "h-16 w-16 shadow-sm sm:h-20 sm:w-20"
+              : "-mb-9 h-24 w-24 shadow-lg hover:shadow-xl sm:-mb-12 sm:h-32 sm:w-32",
+          )}
         >
           <Logo />
         </Link>
