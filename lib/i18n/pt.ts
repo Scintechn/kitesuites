@@ -79,11 +79,11 @@ export const pt: Dictionary = {
 
   gift: {
     eyebrow: "Presente de boas-vindas",
-    title: "Ganhe um presente na sua primeira estadia",
+    title: "Ganhe 10% de desconto na sua primeira estadia",
     subtitle:
-      "Cadastre-se no Clube Kite Suites e receba na hora o seu código de presente. E no seu aniversário tem mimo esperando por você.",
+      "Cadastre-se no Clube Kite Suites e receba na hora o seu código de 10% de desconto na primeira estadia. E no seu aniversário ainda tem mimo esperando por você.",
     benefits: [
-      "Código de presente na hora, sem espera",
+      "10% de desconto na sua primeira estadia",
       "Mimo especial no mês do seu aniversário",
       "Ofertas e novidades antes de todo mundo",
     ],
@@ -107,16 +107,16 @@ export const pt: Dictionary = {
     },
     success: {
       title: "Presente liberado!",
-      body: "Guarde o seu código e apresente na chegada ou na hora da reserva.",
+      body: "Guarde o seu código de 10% e informe na hora de fazer a reserva.",
       returningBody:
         "Você já faz parte do clube — este é o seu código de sempre.",
       codeLabel: "Seu código",
       copied: "Copiado!",
       whatsappCta: "Reservar com meu código",
-      note: "Válido para uma utilização, não cumulativo com outras promoções.",
+      note: "10% de desconto válido na primeira estadia, uma única utilização, não cumulativo com outras promoções.",
     },
     modal: {
-      title: "Antes de ir, leve um presente",
+      title: "Antes de ir, leve 10% de desconto",
       dismiss: "Agora não",
       close: "Fechar",
     },
@@ -611,7 +611,7 @@ export const pt: Dictionary = {
       {
         heading: "Presente de cadastro",
         paragraphs: [
-          "O código de presente é pessoal e intransmissível, válido para uma única utilização, não cumulativo com outras promoções e sujeito a disponibilidade.",
+          "O código dá 10% de desconto na primeira estadia. É pessoal e intransmissível, válido para uma única utilização, não cumulativo com outras promoções e sujeito a disponibilidade.",
           "Reservamo-nos o direito de alterar ou encerrar a campanha a qualquer momento. Códigos já emitidos continuam válidos.",
         ],
       },

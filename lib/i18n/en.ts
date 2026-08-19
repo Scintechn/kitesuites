@@ -79,11 +79,11 @@ export const en: Dictionary = {
 
   gift: {
     eyebrow: "Welcome gift",
-    title: "Get a gift on your first stay",
+    title: "Get 10% off your first stay",
     subtitle:
-      "Join the Kite Suites club and get your gift code instantly. And on your birthday there is a treat waiting for you.",
+      "Join the Kite Suites club and get your 10%-off code for your first stay instantly. And on your birthday there is still a treat waiting for you.",
     benefits: [
-      "Instant gift code, no waiting",
+      "10% off your first stay",
       "A treat in your birthday month",
       "Offers and news before everyone else",
     ],
@@ -107,15 +107,15 @@ export const en: Dictionary = {
     },
     success: {
       title: "Gift unlocked!",
-      body: "Keep your code and show it on arrival or when you book.",
+      body: "Keep your 10% code and quote it when you book.",
       returningBody: "You are already in the club — this is your existing code.",
       codeLabel: "Your code",
       copied: "Copied!",
       whatsappCta: "Book with my code",
-      note: "Valid for one use, not combinable with other promotions.",
+      note: "10% off is valid on your first stay, single use, not combinable with other promotions.",
     },
     modal: {
-      title: "Before you go, take a gift",
+      title: "Before you go, take 10% off",
       dismiss: "Not now",
       close: "Close",
     },
@@ -606,7 +606,7 @@ export const en: Dictionary = {
       {
         heading: "Sign-up gift",
         paragraphs: [
-          "The gift code is personal and non-transferable, valid for a single use, not combinable with other promotions and subject to availability.",
+          "The code gives 10% off your first stay. It is personal and non-transferable, valid for a single use, not combinable with other promotions and subject to availability.",
           "We may change or end the campaign at any time. Codes already issued remain valid.",
         ],
       },
