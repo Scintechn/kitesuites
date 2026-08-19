@@ -36,9 +36,16 @@ type Creds = { email: string; key: string; sheetId: string };
 
 /** Read env at call time, never at module load, so a missing var logs clearly. */
 function credentials(): Creds | null {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const key = process.env.GOOGLE_PRIVATE_KEY;
-  const sheetId = process.env.LEADS_SHEET_ID;
+  // Dashboard paste artifacts are the norm, not the exception: values arrive
+  // wrapped in the quotes copied from a .env file, or with a trailing newline.
+  // Neither is visible in the UI and both break the signature with an opaque
+  // error, so normalise before use.
+  const clean = (v: string | undefined) =>
+    v?.trim().replace(/^['"]|['"]$/g, "") || undefined;
+
+  const email = clean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
+  const key = clean(process.env.GOOGLE_PRIVATE_KEY);
+  const sheetId = clean(process.env.LEADS_SHEET_ID);
   if (!email || !key || !sheetId) return null;
 
   // Guard against the easy mistake: creating an API key (AIza…) instead of a

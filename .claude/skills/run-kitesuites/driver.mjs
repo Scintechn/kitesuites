@@ -45,6 +45,8 @@ const KEEP = Boolean(flag("keep", false));
 const HEADED = Boolean(flag("headed", false));
 /** `prod --form` submits the live contact form — sends a real Telegram message. */
 const FORM = Boolean(flag("form", false));
+/** `prod --lead` submits the live gift form — writes a REAL row to the sheet. */
+const LEAD = Boolean(flag("lead", false));
 const OUT = path.resolve(ROOT, String(flag("out", ".claude/screenshots")));
 
 /** The deployed site checked by `prod`. Override with --url= or an argument. */
@@ -754,6 +756,50 @@ async function prod(browser) {
     await f.close();
   }
 
+  // Opt-in: sign up for the gift on the live site. Off by default because it
+  // writes a REAL row to the production leads spreadsheet.
+  if (LEAD) {
+    log("\n-- prod --lead: submitting the live gift form --");
+    const g = await ctx.newPage();
+    await g.goto(`${BASE}/pt`, { waitUntil: "networkidle" });
+    const section = g.locator("#presente");
+    await section.scrollIntoViewIfNeeded();
+    const gform = section.getByTestId("lead-form");
+
+    const born = new Date(new Date().getFullYear() - 30, 4, 12)
+      .toISOString()
+      .slice(0, 10);
+    await gform.locator('input[name="name"]').fill("Teste Producao (driver)");
+    await gform.locator('input[name="phone"]').fill("22999990000");
+    await gform.locator('input[name="email"]').fill(`prod+${Date.now()}@example.com`);
+    await gform.locator('input[name="birthDate"]').fill(born);
+    await gform.locator('input[name="consent"]').check();
+    await g.waitForTimeout(2600); // clear the server-side bot timing gate
+    await gform.locator('button[type="submit"]').click();
+    await g.waitForTimeout(6000);
+
+    const ok = await section.getByTestId("lead-success").count();
+    if (!ok) {
+      const msg = (await gform.getByTestId("lead-error").textContent())?.trim();
+      fail(`gift signup failed in production ("${msg}") — check the GOOGLE_* vars are set AND that the deployment was rebuilt after setting them`);
+    } else {
+      const stored = await section
+        .getByTestId("lead-success")
+        .getAttribute("data-stored");
+      const code = (await section.getByTestId("lead-code").textContent())?.trim();
+      if (stored === "false") {
+        fail(
+          `production lead accepted (code ${code}) but NOT written to the sheet. ` +
+            `The GOOGLE_* vars are missing from this deployment, or the sheet is ` +
+            `not shared with the service account.`,
+        );
+      } else {
+        pass(`production lead stored in the sheet, code ${code}`);
+      }
+    }
+    await g.close();
+  }
+
   if (errors.length) errors.forEach((e) => fail(`console: ${e}`));
   await ctx.close();
 }
@@ -792,6 +838,8 @@ async function main() {
         "flags:  --dev --port=N --keep --headed --out=DIR --url=URL",
         "        --form            prod only: submit the live contact form",
         "                          (sends a REAL Telegram message)",
+        "        --lead            prod only: submit the live gift form",
+        "                          (writes a REAL row to the leads sheet)",
       ].join("\n"),
     );
     return;

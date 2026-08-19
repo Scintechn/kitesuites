@@ -134,7 +134,10 @@ export async function submitLead(formData: FormData): Promise<LeadResult> {
     // The spreadsheet is not allowed to cost us the lead. Keep the promise to
     // the visitor, shout in the logs, and flag the alert for manual entry.
     stored = false;
-    console.error("[leads] Sheets write failed, falling back to Telegram:", err);
+    console.error(
+      "[leads] Sheets write failed, falling back to Telegram:",
+      err instanceof Error ? err.message : err,
+    );
   }
 
   if (!returning) {
