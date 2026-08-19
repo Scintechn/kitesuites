@@ -24,9 +24,18 @@ export function Header({
 }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [compact, setCompact] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const onScroll = () => {
+      const y = window.scrollY;
+      // Two different thresholds on purpose. The bar picks up its border and
+      // blur almost immediately, but the medallion must not: at 12px a single
+      // trackpad nudge retracted it, so the overhang was effectively never
+      // seen. It now holds until you have genuinely started reading.
+      setScrolled(y > 12);
+      setCompact(y > 140);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -90,7 +99,11 @@ export function Header({
             // the screen and crowded the viewport's top edge either way.
             // The circle, and its overhang, begin at sm.
             "sm:rounded-full sm:bg-paper sm:ring-1 sm:ring-ink-100",
-            scrolled
+            // Overhangs at rest, then pulls back into the bar once you are
+            // reading (see the `compact` threshold above) — at full size it
+            // sits over the left edge of the content column and body copy
+            // would slide under it.
+            compact
               ? "sm:h-20 sm:w-20 sm:shadow-sm"
               : "sm:-mb-12 sm:h-32 sm:w-32 sm:shadow-lg sm:hover:shadow-xl",
           )}
