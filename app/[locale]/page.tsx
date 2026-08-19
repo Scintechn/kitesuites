@@ -17,6 +17,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { Button } from "@/components/ui/Button";
 import { WhatsAppLink } from "@/components/WhatsAppLink";
 import { WindWidget } from "@/components/WindWidget";
+import { GiftSection } from "@/components/GiftSection";
 import { ServiceGlyph } from "@/components/Icon";
 import {
   ArrowRight,
@@ -293,6 +294,8 @@ export default async function HomePage({
           </ul>
         </Container>
       </section>
+
+      <GiftSection t={dict.gift} locale={locale} />
 
       {/* Location */}
       <Section variant="paper">

@@ -1,6 +1,6 @@
 ---
 name: run-kitesuites
-description: Build, run, screenshot and drive the Kite Suites site (Next.js 16 + Tailwind v4, pt/en). Use when asked to run, start, build, serve, test, screenshot, or verify a change in the Kite Suites app — including checking a page renders, the contact form works, the locale switcher works, the Windguru wind forecast loads, or the WhatsApp CTAs point at the right number.
+description: Build, run, screenshot and drive the Kite Suites site (Next.js 16 + Tailwind v4, pt/en). Use when asked to run, start, build, serve, test, screenshot, or verify a change in the Kite Suites app — including checking a page renders, the contact form works, the locale switcher works, the Windguru wind forecast loads, the gift/lead signup stores to Google Sheets, or the WhatsApp CTAs point at the right number.
 ---
 
 # Run Kite Suites
@@ -35,8 +35,9 @@ browser binary (~95 MB) into `~/Library/Caches/ms-playwright/`.
 node .claude/skills/run-kitesuites/driver.mjs smoke      # all 14 routes, both locales
 node .claude/skills/run-kitesuites/driver.mjs interact   # locale switch, WhatsApp CTAs, wind widget, map, mobile menu
 node .claude/skills/run-kitesuites/driver.mjs form       # contact form: validation + real submit
+node .claude/skills/run-kitesuites/driver.mjs lead       # gift signup: age gate, modal show-once, suppression
 node .claude/skills/run-kitesuites/driver.mjs shots      # 28 full-page screenshots (desktop + mobile)
-node .claude/skills/run-kitesuites/driver.mjs all        # smoke, interact, form, shots
+node .claude/skills/run-kitesuites/driver.mjs all        # smoke, interact, lead, form, shots
 ```
 
 Check the **deployed** site instead (starts no local server):
@@ -186,6 +187,9 @@ container you want the widget in. Loading it via `next/script`, or from
 | Menu items and prices | `restaurantPage.sections` in both dictionaries |
 | Wind forecast spot / units | `components/WindWidget.tsx` (`SPOT_ID`, `widgetSrc`) |
 | Rooms | `suitesPage.items` in both dictionaries |
+| Gift offer copy / benefits | `gift` in both dictionaries |
+| Lead storage (sheet columns, code format) | `lib/sheets.ts` |
+| Lead validation / age gate | `lib/actions/leads.ts` |
 | Colours / fonts | `app/globals.css` (`@theme` block) |
 | Lead delivery | `app/[locale]/contact/actions.ts` |
 
@@ -295,6 +299,51 @@ These all cost real time. Read them before debugging.
 | `Module '"lucide-react"' has no exported member 'Instagram'` | Import it from `@/components/icons` instead. |
 | Changes not showing up | `next start` serves the last build. `npm run build`, or pass `--dev`. |
 | Form always shows the red error banner | Expected without `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`. See Contact form above. |
+
+## Lead capture / gift signup
+
+Two surfaces, one form (`components/LeadForm.tsx`), one server action
+(`lib/actions/leads.ts`):
+
+- `components/GiftSection.tsx` — permanent band on the home page at `#presente`.
+- `components/GiftModal.tsx` — native `<dialog>`, shown at most once per
+  visitor.
+
+A signup writes a row to a Google Sheet (`lib/sheets.ts`) and pings Telegram.
+Needs `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `LEADS_SHEET_ID`
+(see `.env.local`, which documents the whole setup). Without them the action
+returns `{ok:false,error:"config"}` and logs `[leads] Missing GOOGLE_...` —
+`driver.mjs lead` treats that as a pass, the same way `form` handles missing
+Telegram vars.
+
+**The sheet is never allowed to cost a lead.** If the Sheets write throws, the
+visitor still gets their code and the Telegram alert is prefixed
+`⚠️ NÃO gravado na planilha` so it can be entered by hand.
+
+**Returning emails get their original code back**, not an error and not a
+second row.
+
+### Modal rules — do not "simplify" these away
+
+The modal is suppressed when any of these hold:
+
+1. `localStorage["ks_gift_v1"]` is set (`dismissed` or `converted`) — once per
+   visitor, forever.
+2. The path is `/contact`, `/privacy-policy` or `/terms`.
+3. **The visitor has reached the inline offer** (`#presente` within 90% of the
+   viewport height). This one is load-bearing: without it, scrolling to the
+   gift section trips the 60% depth trigger and the modal opens *on top of the
+   form being filled in* — interrupting precisely the people who were already
+   converting. It is a synchronous `getBoundingClientRect()` check, not an
+   IntersectionObserver, because IO callbacks land a frame late and lose the
+   race against a fast scroll.
+
+### Age gate
+
+Full birth date is collected for birthday campaigns, so the form is 18+ and
+`leads.ts` re-checks server-side (`MIN_AGE`). Client-side validation is not
+the gate — under-18 data must never reach the sheet. `driver.mjs lead`
+asserts a 10-year-old is rejected.
 
 ## Commit identity
 

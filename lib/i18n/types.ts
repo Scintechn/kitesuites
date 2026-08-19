@@ -59,6 +59,43 @@ export type Dictionary = {
     fallback: string;
     spotCta: string;
   };
+  gift: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+    benefits: string[];
+    form: {
+      name: string;
+      namePlaceholder: string;
+      phone: string;
+      phonePlaceholder: string;
+      email: string;
+      emailPlaceholder: string;
+      birthDate: string;
+      birthDateHint: string;
+      consent: string;
+      consentLink: string;
+      submit: string;
+      submitting: string;
+      errorGeneric: string;
+      errorValidation: string;
+      errorAge: string;
+    };
+    success: {
+      title: string;
+      body: string;
+      returningBody: string;
+      codeLabel: string;
+      copied: string;
+      whatsappCta: string;
+      note: string;
+    };
+    modal: {
+      title: string;
+      dismiss: string;
+      close: string;
+    };
+  };
   suitesTeaser: {
     title: string;
     intro: string;

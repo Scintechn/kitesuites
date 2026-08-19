@@ -77,6 +77,50 @@ export const en: Dictionary = {
     spotCta: "Open on Windguru",
   },
 
+  gift: {
+    eyebrow: "Welcome gift",
+    title: "Get a gift on your first stay",
+    subtitle:
+      "Join the Kite Suites club and get your gift code instantly. And on your birthday there is a treat waiting for you.",
+    benefits: [
+      "Instant gift code, no waiting",
+      "A treat in your birthday month",
+      "Offers and news before everyone else",
+    ],
+    form: {
+      name: "Full name",
+      namePlaceholder: "Your name",
+      phone: "Mobile",
+      phonePlaceholder: "+55 22 99999-9999",
+      email: "Email",
+      emailPlaceholder: "you@email.com",
+      birthDate: "Date of birth",
+      birthDateHint: "So we can send your birthday treat. Sign-up is for over-18s.",
+      consent: "I agree to receive offers and news from Kite Suites and have read the",
+      consentLink: "privacy policy",
+      submit: "Get my gift",
+      submitting: "Sending...",
+      errorGeneric:
+        "We couldn't finish that right now. Please try again or message us on WhatsApp.",
+      errorValidation: "Please check the highlighted fields.",
+      errorAge: "Sign-up is only available to people aged 18 or over.",
+    },
+    success: {
+      title: "Gift unlocked!",
+      body: "Keep your code and show it on arrival or when you book.",
+      returningBody: "You are already in the club — this is your existing code.",
+      codeLabel: "Your code",
+      copied: "Copied!",
+      whatsappCta: "Book with my code",
+      note: "Valid for one use, not combinable with other promotions.",
+    },
+    modal: {
+      title: "Before you go, take a gift",
+      dismiss: "Not now",
+      close: "Close",
+    },
+  },
+
   suitesTeaser: {
     title: "Rooms",
     intro:
@@ -489,7 +533,7 @@ export const en: Dictionary = {
     pageTitle: "Privacy policy",
     pageDescription:
       "How Kite Suites handles the personal data submitted through the contact form.",
-    updated: "Last updated: 18 August 2026",
+    updated: "Last updated: 19 August 2026",
     body: [
       {
         heading: "Who we are",
@@ -502,6 +546,15 @@ export const en: Dictionary = {
         paragraphs: [
           "We only collect what you type into the contact form: name, email, phone (optional), subject and message.",
           "We use no advertising cookies. Visit statistics are collected anonymously and cookie-free by Vercel Analytics.",
+        ],
+      },
+      {
+        heading: "Club sign-up and gift",
+        paragraphs: [
+          "When you claim your gift we collect your name, mobile number, email and date of birth. The date of birth is used solely to send you a treat in your birthday month.",
+          "The legal basis is your consent, given by ticking the box on the form. You can withdraw it at any time on WhatsApp +55 22 99988-6066 and we will stop sending you communications.",
+          "These sign-ups are stored in a Google Sheet (Google LLC, acting as processor) accessible only to our team, and kept for as long as your consent stands.",
+          "Sign-up is for people aged 18 and over. We do not knowingly collect data from minors.",
         ],
       },
       {
@@ -530,7 +583,7 @@ export const en: Dictionary = {
     pageTitle: "Terms of use",
     pageDescription:
       "Terms for using the Kite Suites website, and how bookings work.",
-    updated: "Last updated: 18 August 2026",
+    updated: "Last updated: 19 August 2026",
     body: [
       {
         heading: "Using this site",
@@ -548,6 +601,13 @@ export const en: Dictionary = {
         heading: "Menu and prices",
         paragraphs: [
           "Menu prices are in Brazilian reais (R$) and may vary with availability and season. The menu published here is indicative.",
+        ],
+      },
+      {
+        heading: "Sign-up gift",
+        paragraphs: [
+          "The gift code is personal and non-transferable, valid for a single use, not combinable with other promotions and subject to availability.",
+          "We may change or end the campaign at any time. Codes already issued remain valid.",
         ],
       },
       {

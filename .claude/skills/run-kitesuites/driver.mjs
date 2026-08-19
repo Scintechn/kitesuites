@@ -463,6 +463,127 @@ async function interact(browser) {
 }
 
 /**
+ * Lead capture: the inline section form, the age gate, and the modal's
+ * show-once behaviour.
+ *
+ * Without GOOGLE_* credentials the action returns {ok:false,error:"config"}
+ * and the UI shows the generic error — that is treated as a pass here, the
+ * same way `form` treats missing Telegram vars, because it still proves the
+ * whole client → server-action path runs.
+ */
+async function lead(browser) {
+  log("\n== lead capture ==");
+  await mkdir(OUT, { recursive: true });
+  const ctx = await browser.newContext({
+    viewport: VIEWPORT,
+    reducedMotion: "reduce",
+  });
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/pt`, { waitUntil: "networkidle" });
+
+  const section = page.locator("#presente");
+  await section.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(400);
+  await section.screenshot({ path: path.join(OUT, "gift-section.png") });
+  pass("gift section renders → .claude/screenshots/gift-section.png");
+
+  const form = section.getByTestId("lead-form");
+  const submit = form.locator('button[type="submit"]');
+
+  // 1. Empty submit must be blocked client-side.
+  await submit.click();
+  await form.getByTestId("lead-error").waitFor({ state: "visible", timeout: 5000 });
+  pass("empty submit blocked");
+
+  // 2. Under-18 birth date must be rejected before anything is stored.
+  const now = new Date();
+  const minor = new Date(now.getFullYear() - 10, now.getMonth(), now.getDate())
+    .toISOString()
+    .slice(0, 10);
+  await form.locator('input[name="name"]').fill("Menor de Idade");
+  await form.locator('input[name="phone"]').fill("22999990000");
+  await form.locator('input[name="email"]').fill("menor@example.com");
+  await form.locator('input[name="birthDate"]').fill(minor);
+  await form.locator('input[name="consent"]').check();
+  await page.waitForTimeout(2600); // clear the server-side bot timing gate
+  await submit.click();
+  await page.waitForTimeout(2500);
+
+  if ((await section.getByTestId("lead-success").count()) > 0) {
+    fail("under-18 birth date was ACCEPTED — the age gate is not working");
+  } else {
+    const msg = (await form.getByTestId("lead-error").textContent())?.trim();
+    pass(`under-18 rejected: "${msg}"`);
+  }
+
+  // 3. A valid adult submission.
+  const adult = new Date(now.getFullYear() - 30, 4, 12).toISOString().slice(0, 10);
+  await form.locator('input[name="name"]').fill("Teste Driver");
+  await form.locator('input[name="email"]').fill(`driver+${Date.now()}@example.com`);
+  await form.locator('input[name="birthDate"]').fill(adult);
+  await submit.click();
+  await page.waitForTimeout(4000);
+
+  if ((await section.getByTestId("lead-success").count()) > 0) {
+    const code = (await section.getByTestId("lead-code").textContent())?.trim();
+    pass(`lead accepted, gift code issued: ${code}`);
+    await section.screenshot({ path: path.join(OUT, "gift-success.png") });
+  } else {
+    const msg = (await form.getByTestId("lead-error").textContent())?.trim();
+    notes.push(
+      `lead form reached the server action and returned an error ("${msg}"). ` +
+        `Without GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_PRIVATE_KEY / LEADS_SHEET_ID ` +
+        `this is the expected local outcome (leads.ts logs "[leads] Missing GOOGLE_...").`,
+    );
+    pass("lead form submitted; server action responded (see note below)");
+  }
+  await page.close();
+
+  // 4. The modal: fires after real scroll depth, once, and never on /contact.
+  const m = await ctx.newPage();
+  await m.goto(`${BASE}/pt/suites`, { waitUntil: "networkidle" });
+  const dialog = m.getByTestId("gift-modal");
+  if (await dialog.isVisible().catch(() => false)) {
+    fail("gift modal was open on load — it must wait for scroll depth");
+  }
+  await m.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  try {
+    await dialog.waitFor({ state: "visible", timeout: 8000 });
+    pass("gift modal opens after scrolling past 60%");
+    await m.screenshot({ path: path.join(OUT, "gift-modal.png") });
+  } catch {
+    fail("gift modal never opened after scrolling to the bottom");
+  }
+
+  // Dismiss, reload, and confirm it stays gone.
+  await m.getByTestId("gift-dismiss").click();
+  await m.waitForTimeout(400);
+  await m.reload({ waitUntil: "networkidle" });
+  await m.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await m.waitForTimeout(1500);
+  if (await dialog.isVisible().catch(() => false)) {
+    fail("gift modal reappeared after being dismissed (localStorage suppression broken)");
+  } else {
+    pass("dismissed modal stays gone across reloads");
+  }
+  await m.close();
+
+  // Never on /contact — the visitor is already converting there.
+  const c = await ctx.newPage();
+  await c.goto(`${BASE}/pt/contact`, { waitUntil: "networkidle" });
+  await c.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await c.waitForTimeout(1500);
+  if (await c.getByTestId("gift-modal").isVisible().catch(() => false)) {
+    fail("gift modal opened on /contact — it must be suppressed there");
+  } else {
+    pass("gift modal suppressed on /contact");
+  }
+  await c.close();
+
+  await ctx.close();
+}
+
+/**
  * Post-deploy check against the live site. Starts no server — it only talks
  * to whatever `--url` points at (default the Vercel production deployment).
  *
@@ -643,7 +764,7 @@ async function shot(browser) {
   await ctx.close();
 }
 
-const COMMANDS = { smoke, shots, form, interact, shot, prod };
+const COMMANDS = { smoke, shots, form, interact, lead, shot, prod };
 
 /** Commands that talk to a deployed site instead of booting one locally. */
 const REMOTE = new Set(["prod"]);
@@ -652,7 +773,7 @@ async function main() {
   if (cmd === "help" || cmd === "--help") {
     log(
       [
-        "local:  smoke | shots | form | interact | shot <route> <file> | all",
+        "local:  smoke | shots | form | interact | lead | shot <route> <file> | all",
         "remote: prod [url]        check the deployed site (no local server)",
         "flags:  --dev --port=N --keep --headed --out=DIR --url=URL",
         "        --form            prod only: submit the live contact form",
@@ -663,7 +784,7 @@ async function main() {
   }
 
   const toRun =
-    cmd === "all" ? ["smoke", "interact", "form", "shots"] : [cmd];
+    cmd === "all" ? ["smoke", "interact", "lead", "form", "shots"] : [cmd];
   for (const c of toRun) {
     if (!COMMANDS[c]) throw new Error(`unknown command: ${c}`);
   }

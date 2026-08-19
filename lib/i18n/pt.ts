@@ -77,6 +77,51 @@ export const pt: Dictionary = {
     spotCta: "Ver no Windguru",
   },
 
+  gift: {
+    eyebrow: "Presente de boas-vindas",
+    title: "Ganhe um presente na sua primeira estadia",
+    subtitle:
+      "Cadastre-se no Clube Kite Suites e receba na hora o seu código de presente. E no seu aniversário tem mimo esperando por você.",
+    benefits: [
+      "Código de presente na hora, sem espera",
+      "Mimo especial no mês do seu aniversário",
+      "Ofertas e novidades antes de todo mundo",
+    ],
+    form: {
+      name: "Nome completo",
+      namePlaceholder: "Seu nome",
+      phone: "Celular",
+      phonePlaceholder: "(22) 99999-9999",
+      email: "E-mail",
+      emailPlaceholder: "voce@email.com",
+      birthDate: "Data de nascimento",
+      birthDateHint: "Para enviarmos o seu mimo de aniversário. Cadastro para maiores de 18 anos.",
+      consent: "Aceito receber ofertas e novidades do Kite Suites e li a",
+      consentLink: "política de privacidade",
+      submit: "Quero meu presente",
+      submitting: "Enviando...",
+      errorGeneric:
+        "Não foi possível concluir agora. Tente novamente ou fale pelo WhatsApp.",
+      errorValidation: "Verifique os campos destacados.",
+      errorAge: "O cadastro é permitido apenas para maiores de 18 anos.",
+    },
+    success: {
+      title: "Presente liberado!",
+      body: "Guarde o seu código e apresente na chegada ou na hora da reserva.",
+      returningBody:
+        "Você já faz parte do clube — este é o seu código de sempre.",
+      codeLabel: "Seu código",
+      copied: "Copiado!",
+      whatsappCta: "Reservar com meu código",
+      note: "Válido para uma utilização, não cumulativo com outras promoções.",
+    },
+    modal: {
+      title: "Antes de ir, leve um presente",
+      dismiss: "Agora não",
+      close: "Fechar",
+    },
+  },
+
   suitesTeaser: {
     title: "Acomodações",
     intro:
@@ -493,7 +538,7 @@ export const pt: Dictionary = {
     pageTitle: "Política de privacidade",
     pageDescription:
       "Como o Kite Suites trata os dados pessoais enviados pelo formulário de contato.",
-    updated: "Última atualização: 18 de agosto de 2026",
+    updated: "Última atualização: 19 de agosto de 2026",
     body: [
       {
         heading: "Quem somos",
@@ -506,6 +551,15 @@ export const pt: Dictionary = {
         paragraphs: [
           "Recolhemos apenas os dados que você preenche no formulário de contato: nome, e-mail, telefone (opcional), assunto e mensagem.",
           "Não utilizamos cookies de publicidade. As estatísticas de visita são recolhidas pelo Vercel Analytics de forma anónima e sem cookies.",
+        ],
+      },
+      {
+        heading: "Cadastro no clube e presente",
+        paragraphs: [
+          "Ao pedir o seu presente, recolhemos nome, celular, e-mail e data de nascimento. A data de nascimento serve exclusivamente para lhe enviarmos um mimo no mês do seu aniversário.",
+          "A base legal é o seu consentimento, dado ao marcar a caixa no formulário. Pode retirá-lo a qualquer momento pelo WhatsApp +55 22 99988-6066, e deixaremos de lhe enviar comunicações.",
+          "Estes cadastros são guardados numa planilha do Google (Google LLC, na qualidade de operador) à qual apenas a nossa equipa tem acesso, e conservados enquanto mantiver o consentimento.",
+          "O cadastro é destinado a maiores de 18 anos. Não recolhemos intencionalmente dados de menores de idade.",
         ],
       },
       {
@@ -534,7 +588,7 @@ export const pt: Dictionary = {
     pageTitle: "Termos de uso",
     pageDescription:
       "Condições de utilização do site do Kite Suites e informações sobre reservas.",
-    updated: "Última atualização: 18 de agosto de 2026",
+    updated: "Última atualização: 19 de agosto de 2026",
     body: [
       {
         heading: "Utilização do site",
@@ -552,6 +606,13 @@ export const pt: Dictionary = {
         heading: "Cardápio e preços",
         paragraphs: [
           "Os valores apresentados no cardápio são em reais (R$) e podem variar consoante a disponibilidade e a época do ano. O cardápio publicado aqui é indicativo.",
+        ],
+      },
+      {
+        heading: "Presente de cadastro",
+        paragraphs: [
+          "O código de presente é pessoal e intransmissível, válido para uma única utilização, não cumulativo com outras promoções e sujeito a disponibilidade.",
+          "Reservamo-nos o direito de alterar ou encerrar a campanha a qualquer momento. Códigos já emitidos continuam válidos.",
         ],
       },
       {

@@ -17,6 +17,7 @@ import { TopBar } from "@/components/TopBar";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
+import { GiftModal } from "@/components/GiftModal";
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -173,6 +174,7 @@ export default async function LocaleLayout({
         <main id="main">{children}</main>
         <Footer locale={locale} t={dict.footer} nav={dict.nav} />
         <WhatsAppFab message={bookMessage} label={dict.nav.whatsappCta} />
+        <GiftModal t={dict.gift} locale={locale} />
 
         <script
           type="application/ld+json"
