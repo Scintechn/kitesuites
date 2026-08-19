@@ -43,6 +43,8 @@ const DEV = Boolean(flag("dev", false));
 const PORT = Number(flag("port", 4310));
 const KEEP = Boolean(flag("keep", false));
 const HEADED = Boolean(flag("headed", false));
+/** `prod --form` submits the live contact form — sends a real Telegram message. */
+const FORM = Boolean(flag("form", false));
 const OUT = path.resolve(ROOT, String(flag("out", ".claude/screenshots")));
 
 /** The deployed site checked by `prod`. Override with --url= or an argument. */
@@ -586,6 +588,37 @@ async function prod(browser) {
   await page.screenshot({ path: path.join(OUT, "prod-home.png"), fullPage: true });
   pass(path.relative(ROOT, path.join(OUT, "prod-home.png")));
 
+  // Opt-in: actually submit the contact form on the live site. Off by default
+  // because it SENDS A REAL TELEGRAM MESSAGE to the business every run.
+  if (FORM) {
+    log("\n-- prod --form: submitting the live contact form --");
+    const f = await ctx.newPage();
+    await f.goto(`${BASE}/pt/contact`, { waitUntil: "networkidle" });
+    await f.fill("#name", "Teste automatico (driver)");
+    await f.fill("#email", "driver@example.com");
+    await f.fill("#phone", "+55 22 99999-0000");
+    await f.selectOption("#subject", "outro");
+    await f.fill(
+      "#message",
+      "Mensagem de teste do driver run-kitesuites verificando a entrega em producao. Pode ignorar.",
+    );
+    await f.check("#consent");
+    await f.getByTestId("contact-form").locator('button[type="submit"]').click();
+    await f.waitForTimeout(6000);
+
+    if ((await f.getByRole("status").count()) > 0) {
+      pass("contact form delivered to Telegram from production");
+    } else {
+      const msg = (await f.getByTestId("form-error").textContent())?.trim();
+      fail(
+        `contact form failed in production ("${msg}"). Either TELEGRAM_BOT_TOKEN / ` +
+          `TELEGRAM_CHAT_ID are unset, or they were added after this deployment ` +
+          `was built — Vercel only applies env vars to NEW deployments, so redeploy.`,
+      );
+    }
+    await f.close();
+  }
+
   if (errors.length) errors.forEach((e) => fail(`console: ${e}`));
   await ctx.close();
 }
@@ -622,6 +655,8 @@ async function main() {
         "local:  smoke | shots | form | interact | shot <route> <file> | all",
         "remote: prod [url]        check the deployed site (no local server)",
         "flags:  --dev --port=N --keep --headed --out=DIR --url=URL",
+        "        --form            prod only: submit the live contact form",
+        "                          (sends a REAL Telegram message)",
       ].join("\n"),
     );
     return;

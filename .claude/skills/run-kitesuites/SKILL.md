@@ -102,6 +102,21 @@ fail in production:
 - A real browser pass: home renders, Windguru forecast loads, no console
   errors, and a screenshot at `.claude/screenshots/prod-home.png`.
 
+### Testing the live contact form
+
+```bash
+node .claude/skills/run-kitesuites/driver.mjs prod --form
+```
+
+Opt-in, and off by default because **it sends a real Telegram message to the
+business every run**. Use it after changing `TELEGRAM_BOT_TOKEN` /
+`TELEGRAM_CHAT_ID`, since nothing else can prove production delivery works.
+
+If it fails, the usual cause is not a missing variable but a stale build:
+**Vercel only applies environment variables to new deployments.** Setting them
+in the dashboard does nothing for the deployment already serving traffic —
+redeploy, then re-run.
+
 **Custom analytics events are not covered.** `whatsapp_click`, `phone_click`
 and `contact_form_submit` only fire on real interaction, so they cannot be
 asserted from a cold page load — check the dashboard's Events tab after
