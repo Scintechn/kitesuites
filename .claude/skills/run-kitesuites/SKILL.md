@@ -296,6 +296,33 @@ These all cost real time. Read them before debugging.
 | Changes not showing up | `next start` serves the last build. `npm run build`, or pass `--dev`. |
 | Form always shows the red error banner | Expected without `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`. See Contact form above. |
 
+## Commit identity
+
+Commits must be authored as **Scintechn**, the account that owns the GitHub
+repo and the Vercel team. Vercel reads git commit metadata, so the wrong
+author email makes every deployment show
+*"<user> is not a member of this team"* even when the push itself was
+correctly authenticated.
+
+This repo is configured locally (not globally):
+
+```bash
+git config user.name  "Scintechn"
+git config user.email "245697567+Scintechn@users.noreply.github.com"
+```
+
+Use the GitHub noreply address, not a personal one. `scintilla.lima@gmail.com`
+in particular belongs to a **different** GitHub account (`scintylla`), and an
+email can only be verified on one account — so pointing at it silently
+misattributes the commit. Commits before 2026-08-19 carry that wrong author
+and were deliberately left as-is rather than rewritten.
+
+Verify after committing:
+
+```bash
+gh api repos/Scintechn/kitesuites/commits/main -q .author.login   # → Scintechn
+```
+
 ## Deploy
 
 Vercel. `vercel.json` pins `"framework": "nextjs"` — if the dashboard preset
