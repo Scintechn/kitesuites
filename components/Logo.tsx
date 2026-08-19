@@ -41,7 +41,10 @@ export function Logo({
         // medallion can grow and shrink and the mark follows. That means its
         // parent must have a definite height — it always does (the medallion
         // is a fixed-size circle).
-        isDark ? "h-[72%] w-auto" : "h-20 w-20 rounded-full",
+        // 80%, not less: the artwork already carries its own generous clear
+        // space, so a smaller share leaves the mark looking marooned in the
+        // middle of the disc.
+        isDark ? "h-[80%] w-auto" : "h-20 w-20 rounded-full",
         className,
       )}
     />

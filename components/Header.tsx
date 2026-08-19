@@ -62,7 +62,7 @@ export function Header({
       </a>
 
       {/* Height is tied to the brand lockup — see the note in Logo.tsx. */}
-      <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between gap-4 px-5 sm:h-24 sm:px-8">
+      <div className="mx-auto flex h-24 w-full max-w-6xl items-center justify-between gap-4 px-5 sm:h-24 sm:px-8">
         {/*
           Brand medallion. The circle is taller than the header bar and the
           negative bottom margin pulls its layout box up, so roughly a third
@@ -84,9 +84,14 @@ export function Header({
           aria-label={business.brandName}
           className={cn(
             "relative z-50 flex shrink-0 items-center justify-center rounded-full bg-paper ring-1 ring-ink-100 transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400",
+            // Mobile keeps the badge *inside* the bar. An overhang needs
+            // horizontal room to read as deliberate; at 390px a protruding
+            // 96px disc is a quarter of the screen sitting on the hero, and
+            // its top edge crowds the viewport. The overhang starts at sm.
+            "h-20 w-20 shadow-sm",
             scrolled
-              ? "h-16 w-16 shadow-sm sm:h-20 sm:w-20"
-              : "-mb-9 h-24 w-24 shadow-lg hover:shadow-xl sm:-mb-12 sm:h-32 sm:w-32",
+              ? "sm:h-20 sm:w-20"
+              : "sm:-mb-12 sm:h-32 sm:w-32 sm:shadow-lg sm:hover:shadow-xl",
           )}
         >
           <Logo />
@@ -139,7 +144,7 @@ export function Header({
       {open ? (
         <div
           id="mobile-menu"
-          className="fixed inset-x-0 top-20 z-40 border-t border-ink-100 bg-paper pb-8 shadow-lg lg:hidden"
+          className="fixed inset-x-0 top-24 z-40 border-t border-ink-100 bg-paper pb-8 shadow-lg lg:hidden"
         >
           <nav
             aria-label="Mobile"
