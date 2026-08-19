@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
 @theme {
+  /* Narrow-phone breakpoint, below Tailwind's sm. The header's booking CTA
+     drops to a shorter label under this width so it can sit beside the logo
+     and the menu button without wrapping. */
+  --breakpoint-xs: 22rem;
+
   /*
    * Palette sampled from the real brand mark (public/images/logo-dark.png):
    * a deep lagoon teal for the wordmark and waves, an orange kite above it.

@@ -33,6 +33,7 @@ export type Dictionary = {
     restaurant: string;
     contact: string;
     bookCta: string;
+    bookShort: string;
     whatsappCta: string;
     callCta: string;
     skipToContent: string;

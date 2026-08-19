@@ -139,26 +139,47 @@ export function Header({
           </WhatsAppLink>
         </div>
 
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-controls="mobile-menu"
-          aria-label={open ? "Menu" : "Menu"}
-          onClick={() => setOpen((v) => !v)}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-ink-100 bg-white text-ink-700 transition-colors hover:bg-ink-100 lg:hidden"
-        >
-          {open ? (
-            <X className="h-5 w-5" aria-hidden="true" />
-          ) : (
-            <Menu className="h-5 w-5" aria-hidden="true" />
-          )}
-        </button>
+        {/*
+          The booking CTA is the highest-intent action on the page, so it sits
+          in the bar itself below lg rather than inside the hamburger. Same
+          button and same WhatsApp target as the desktop one — only the label
+          shortens on the narrowest screens.
+        */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <WhatsAppLink
+            href={whatsappLink(bookMessage)}
+            location="header"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-accent-400 px-4 text-sm font-semibold text-ink-900 shadow-sm transition-colors hover:bg-accent-300"
+          >
+            <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="hidden xs:inline">{t.bookCta}</span>
+            <span className="xs:hidden">{t.bookShort}</span>
+          </WhatsAppLink>
+
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            aria-label="Menu"
+            onClick={() => setOpen((v) => !v)}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-ink-100 bg-white text-ink-700 transition-colors hover:bg-ink-100"
+          >
+            {open ? (
+              <X className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
+        </div>
       </div>
 
       {open ? (
         <div
           id="mobile-menu"
-          className="fixed inset-x-0 top-20 z-40 sm:top-24 border-t border-ink-100 bg-paper pb-8 shadow-lg lg:hidden"
+          // `absolute top-full`, not `fixed` with a hard-coded offset: the
+          // header sits below the (non-sticky) TopBar until the page scrolls,
+          // so any fixed offset would be wrong in one state or the other.
+          className="absolute inset-x-0 top-full z-40 border-t border-ink-100 bg-paper pb-8 shadow-lg lg:hidden"
         >
           <nav
             aria-label="Mobile"
@@ -174,23 +195,17 @@ export function Header({
                 {item.label}
               </Link>
             ))}
-            <div className="mt-4 flex flex-col gap-3 border-t border-ink-100 pt-5">
-              <WhatsAppLink
-                href={whatsappLink(bookMessage)}
-                location="header"
-                onClick={() => setOpen(false)}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-accent-400 px-5 text-sm font-semibold text-ink-900"
-              >
-                <MessageCircle className="h-4 w-4" aria-hidden="true" />
-                {t.bookCta} · {business.whatsapp.display}
-              </WhatsAppLink>
-              <div className="pt-1">
-                <LocaleSwitcher
-                  current={locale}
-                  labels={{ pt: switcherLabels.pt, en: switcherLabels.en }}
-                  ariaLabel={switcherLabels.label}
-                />
-              </div>
+            {/*
+              No booking CTA in here any more — it lives in the bar itself and
+              is visible without opening the menu, so repeating it was just
+              noise.
+            */}
+            <div className="mt-4 border-t border-ink-100 pt-5">
+              <LocaleSwitcher
+                current={locale}
+                labels={{ pt: switcherLabels.pt, en: switcherLabels.en }}
+                ariaLabel={switcherLabels.label}
+              />
             </div>
           </nav>
         </div>

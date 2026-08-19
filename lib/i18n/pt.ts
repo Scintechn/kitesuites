@@ -14,6 +14,7 @@ export const pt: Dictionary = {
     restaurant: "Restaurante",
     contact: "Contato",
     bookCta: "Reserve aqui",
+    bookShort: "Reservar",
     whatsappCta: "WhatsApp",
     callCta: "Ligar",
     skipToContent: "Saltar para o conteúdo",

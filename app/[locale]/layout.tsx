@@ -13,6 +13,7 @@ import {
   locales,
 } from "@/lib/i18n";
 import { addressOneLine, business } from "@/lib/business";
+import { TopBar } from "@/components/TopBar";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
@@ -158,6 +159,7 @@ export default async function LocaleLayout({
       className={`${fontSans.variable} ${fontDisplay.variable}`}
     >
       <body className="min-h-screen bg-paper text-ink-900 antialiased">
+        <TopBar hours={dict.contact.hoursValue} />
         <Header
           locale={locale}
           t={dict.nav}
