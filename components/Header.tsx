@@ -62,12 +62,13 @@ export function Header({
       </a>
 
       {/* Height is tied to the brand lockup — see the note in Logo.tsx. */}
-      <div className="mx-auto flex h-24 w-full max-w-6xl items-center justify-between gap-4 px-5 sm:h-24 sm:px-8">
+      <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between gap-4 px-5 sm:h-24 sm:px-8">
         {/*
-          Brand medallion. The circle is taller than the header bar and the
-          negative bottom margin pulls its layout box up, so roughly a third
-          of it hangs *below* the header onto the page — which is the only way
-          the square stacked lockup gets enough room to be readable.
+          Brand medallion — sm and up only. The circle is taller than the
+          header bar and the negative bottom margin pulls its layout box up,
+          so roughly a third of it hangs *below* the header onto the page,
+          giving the square stacked lockup room the bar itself doesn't have.
+          On mobile there is no circle at all: just the mark in the bar.
 
           It retracts into the bar once the page scrolls: at full size it sits
           permanently over the top-left of the content, which is fine against
@@ -83,14 +84,14 @@ export function Header({
           href={`/${locale}`}
           aria-label={business.brandName}
           className={cn(
-            "relative z-50 flex shrink-0 items-center justify-center rounded-full bg-paper ring-1 ring-ink-100 transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400",
-            // Mobile keeps the badge *inside* the bar. An overhang needs
-            // horizontal room to read as deliberate; at 390px a protruding
-            // 96px disc is a quarter of the screen sitting on the hero, and
-            // its top edge crowds the viewport. The overhang starts at sm.
-            "h-20 w-20 shadow-sm",
+            "relative z-50 flex shrink-0 items-center justify-center rounded-md transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-400",
+            // No medallion on mobile — just the mark in the bar. A disc needs
+            // horizontal room to look deliberate; at 390px it was a quarter of
+            // the screen and crowded the viewport's top edge either way.
+            // The circle, and its overhang, begin at sm.
+            "sm:rounded-full sm:bg-paper sm:ring-1 sm:ring-ink-100",
             scrolled
-              ? "sm:h-20 sm:w-20"
+              ? "sm:h-20 sm:w-20 sm:shadow-sm"
               : "sm:-mb-12 sm:h-32 sm:w-32 sm:shadow-lg sm:hover:shadow-xl",
           )}
         >
@@ -144,7 +145,7 @@ export function Header({
       {open ? (
         <div
           id="mobile-menu"
-          className="fixed inset-x-0 top-24 z-40 border-t border-ink-100 bg-paper pb-8 shadow-lg lg:hidden"
+          className="fixed inset-x-0 top-20 z-40 sm:top-24 border-t border-ink-100 bg-paper pb-8 shadow-lg lg:hidden"
         >
           <nav
             aria-label="Mobile"

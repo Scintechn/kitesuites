@@ -41,10 +41,12 @@ export function Logo({
         // medallion can grow and shrink and the mark follows. That means its
         // parent must have a definite height — it always does (the medallion
         // is a fixed-size circle).
-        // 80%, not less: the artwork already carries its own generous clear
-        // space, so a smaller share leaves the mark looking marooned in the
-        // middle of the disc.
-        isDark ? "h-[80%] w-auto" : "h-20 w-20 rounded-full",
+        // Mobile has no medallion, so the mark takes a plain fixed height.
+        // From sm up it sits in the circle and is sized as a share of it, so
+        // it follows the medallion as that grows and shrinks on scroll. 80%,
+        // not less: the artwork carries its own generous clear space, and a
+        // smaller share leaves it marooned in the middle of the disc.
+        isDark ? "h-16 w-auto sm:h-[80%]" : "h-20 w-20 rounded-full",
         className,
       )}
     />
