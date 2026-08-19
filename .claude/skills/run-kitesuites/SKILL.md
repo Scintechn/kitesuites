@@ -39,6 +39,13 @@ node .claude/skills/run-kitesuites/driver.mjs shots      # 28 full-page screensh
 node .claude/skills/run-kitesuites/driver.mjs all        # smoke, interact, form, shots
 ```
 
+Check the **deployed** site instead (starts no local server):
+
+```bash
+node .claude/skills/run-kitesuites/driver.mjs prod                        # https://kitesuites.vercel.app
+node .claude/skills/run-kitesuites/driver.mjs prod https://kitesuites.com.br
+```
+
 One-off screenshot of a single route:
 
 ```bash
@@ -70,6 +77,36 @@ Expected clean output:
 
 OK — smoke passed
 ```
+
+## Run after every deploy (`prod`)
+
+```bash
+node .claude/skills/run-kitesuites/driver.mjs prod
+```
+
+Targets `https://kitesuites.vercel.app` by default; pass a URL to check
+another host. It boots nothing locally — several of these checks *can only*
+fail in production:
+
+- All 14 routes → 200, with exactly one `<html>` and the right `lang`.
+- `/` → 307/308 → `/pt`, plus `robots.txt` and `sitemap.xml`.
+- **`/_vercel/insights/script.js` → 200 `application/javascript`.** This is the
+  Vercel Web Analytics tracker. It 404s locally by design, so production is
+  the only place it can be verified. A 404 here means analytics is off for the
+  project, or the host is not served by Vercel at all.
+- Security headers actually emitted by the edge (`X-Frame-Options`,
+  `X-Content-Type-Options`, `Referrer-Policy`) — these come from
+  `next.config.ts` but only the deployment proves they survive.
+- Canonical URL, with a note when it points somewhere other than the host
+  being tested.
+- A real browser pass: home renders, Windguru forecast loads, no console
+  errors, and a screenshot at `.claude/screenshots/prod-home.png`.
+
+**Custom analytics events are not covered.** `whatsapp_click`, `phone_click`
+and `contact_form_submit` only fire on real interaction, so they cannot be
+asserted from a cold page load — check the dashboard's Events tab after
+clicking. If page views arrive but events never do, that is a plan limit, not
+a code fault.
 
 ## Build
 
@@ -250,4 +287,14 @@ Vercel. `vercel.json` pins `"framework": "nextjs"` — if the dashboard preset
 ever drifts to "Other", builds finish in ~14s with `Builds: . [0ms]` and every
 route 404s from the edge. Verify with `vercel inspect <deployment-url>`.
 
-Env vars needed in production: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
+Env vars needed in production: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`. They
+live only in a gitignored `.env.local` locally, so they must be set in the
+dashboard separately or the production contact form fails closed.
+
+Verify a deploy with `driver.mjs prod` (see above).
+
+**The domain has not moved yet.** `business.siteUrl` is
+`https://kitesuites.com.br`, which still serves the old site, so canonical
+URLs, OG tags and `sitemap.xml` all advertise a host where this content is not
+published. That resolves itself when DNS points at Vercel — until then, don't
+submit the sitemap to Search Console.

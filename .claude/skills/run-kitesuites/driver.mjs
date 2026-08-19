@@ -23,7 +23,7 @@
  */
 
 import { spawn } from "node:child_process";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, readFile, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -44,7 +44,16 @@ const PORT = Number(flag("port", 4310));
 const KEEP = Boolean(flag("keep", false));
 const HEADED = Boolean(flag("headed", false));
 const OUT = path.resolve(ROOT, String(flag("out", ".claude/screenshots")));
-const BASE = `http://127.0.0.1:${PORT}`;
+
+/** The deployed site checked by `prod`. Override with --url= or an argument. */
+const PROD_URL = String(rest[0] ?? flag("url", "https://kitesuites.vercel.app"))
+  .replace(/\/+$/, "");
+
+/**
+ * Reassigned to PROD_URL by the `prod` command — that one talks to the live
+ * deployment and never starts a local server.
+ */
+let BASE = `http://127.0.0.1:${PORT}`;
 
 const VIEWPORT = { width: 1366, height: 900 };
 const MOBILE = { width: 390, height: 844 };
@@ -451,6 +460,136 @@ async function interact(browser) {
   await ctx.close();
 }
 
+/**
+ * Post-deploy check against the live site. Starts no server — it only talks
+ * to whatever `--url` points at (default the Vercel production deployment).
+ *
+ * Run this after every deploy. Several of these can only fail in production:
+ * the analytics script does not exist locally, security headers come from the
+ * edge, and canonical URLs point at the final domain rather than the host you
+ * are actually testing.
+ */
+async function prod(browser) {
+  log(`\n== prod: ${BASE} ==`);
+
+  // Every route, both locales.
+  for (const locale of LOCALES) {
+    for (const route of ROUTES) {
+      const url = `${BASE}/${locale}${route}`;
+      const res = await fetch(url, { redirect: "manual" });
+      const label = `${locale}${route || "/"}`;
+      if (res.status !== 200) {
+        fail(`${label} → HTTP ${res.status}`);
+        continue;
+      }
+
+      // The nested-root-layout regression is invisible in a browser: Chromium
+      // silently drops the inner <html> and the page looks perfect while
+      // shipping the wrong `lang`. Check the raw markup.
+      const html = await res.text();
+      const tags = (html.match(/<html[\s>]/g) ?? []).length;
+      const lang = /<html[^>]*\blang="([^"]+)"/.exec(html)?.[1];
+      const expected = locale === "pt" ? "pt-BR" : "en";
+
+      if (tags !== 1) fail(`${label} → ${tags} <html> elements (expected 1)`);
+      else if (lang !== expected)
+        fail(`${label} → lang="${lang}" (expected "${expected}")`);
+      else pass(`${label} → 200, lang=${lang}`);
+    }
+  }
+
+  // Locale redirect, robots, sitemap.
+  const root = await fetch(`${BASE}/`, { redirect: "manual" });
+  const loc = root.headers.get("location") ?? "";
+  if ([301, 307, 308].includes(root.status) && loc.endsWith("/pt"))
+    pass(`/ → ${root.status} → ${loc}`);
+  else fail(`/ → ${root.status} → ${loc || "(no redirect)"} (expected → /pt)`);
+
+  for (const p of ["/robots.txt", "/sitemap.xml"]) {
+    const r = await fetch(`${BASE}${p}`);
+    if (r.ok) pass(`${p} → ${r.status}`);
+    else fail(`${p} → ${r.status}`);
+  }
+
+  // Vercel Web Analytics. This 404s locally by design, so production is the
+  // only place it can be verified.
+  const insights = await fetch(`${BASE}/_vercel/insights/script.js`);
+  const ctype = insights.headers.get("content-type") ?? "";
+  if (insights.ok && /javascript/.test(ctype)) {
+    pass(`analytics script → ${insights.status} (${ctype.split(";")[0]})`);
+  } else {
+    fail(
+      `analytics script → ${insights.status} ${ctype} — Web Analytics is not ` +
+        `enabled on this project, or this host is not served by Vercel`,
+    );
+  }
+
+  // Security headers from next.config.ts, as actually served by the edge.
+  const headRes = await fetch(`${BASE}/pt`);
+  for (const [header, expected] of [
+    ["x-frame-options", "DENY"],
+    ["x-content-type-options", "nosniff"],
+    ["referrer-policy", "strict-origin-when-cross-origin"],
+  ]) {
+    const got = headRes.headers.get(header);
+    if (got === expected) pass(`${header}: ${got}`);
+    else fail(`${header}: ${got ?? "(missing)"} (expected ${expected})`);
+  }
+
+  // Canonical host. Not a failure — it is correct to point at the final
+  // domain — but it is worth saying out loud when the domain being tested is
+  // not the domain being advertised to search engines.
+  const home = await headRes.text();
+  const canonical = /<link rel="canonical" href="([^"]+)"/.exec(home)?.[1];
+  const siteUrl = /siteUrl:\s*"([^"]+)"/.exec(
+    await readFile(path.join(ROOT, "lib/business.ts"), "utf8"),
+  )?.[1];
+
+  if (!canonical) {
+    fail("no <link rel=canonical> on the home page");
+  } else if (canonical.startsWith(BASE)) {
+    pass(`canonical → ${canonical}`);
+  } else {
+    pass(`canonical → ${canonical}`);
+    notes.push(
+      `canonical/OG/sitemap point at ${siteUrl}, not the host just tested ` +
+        `(${BASE}). That is correct once DNS moves, but until then search ` +
+        `engines are told the canonical copy lives somewhere this content is ` +
+        `not served. Do not submit the sitemap to Search Console yet.`,
+    );
+  }
+
+  // Finally, render it. Catches anything that only breaks in a real browser.
+  const ctx = await browser.newContext({
+    viewport: VIEWPORT,
+    reducedMotion: "reduce",
+  });
+  const page = await ctx.newPage();
+  const errors = watch(page);
+  await page.goto(`${BASE}/pt`, { waitUntil: "networkidle" });
+
+  const h1 = (await page.locator("h1").first().textContent())?.trim() ?? "";
+  if (h1) pass(`home renders → "${h1.slice(0, 40)}"`);
+  else fail("home page has no <h1>");
+
+  await page.locator("#vento").scrollIntoViewIfNeeded();
+  const wind = page.locator('#vento iframe[src*="windguru"]').first();
+  try {
+    await wind.waitFor({ state: "attached", timeout: 20_000 });
+    pass("windguru forecast loads in production");
+  } catch {
+    fail("windguru forecast did not load in production");
+  }
+
+  await mkdir(OUT, { recursive: true });
+  await settle(page);
+  await page.screenshot({ path: path.join(OUT, "prod-home.png"), fullPage: true });
+  pass(path.relative(ROOT, path.join(OUT, "prod-home.png")));
+
+  if (errors.length) errors.forEach((e) => fail(`console: ${e}`));
+  await ctx.close();
+}
+
 /** One-off: screenshot a single route. */
 async function shot(browser) {
   const route = rest[0] ?? "/pt";
@@ -471,14 +610,18 @@ async function shot(browser) {
   await ctx.close();
 }
 
-const COMMANDS = { smoke, shots, form, interact, shot };
+const COMMANDS = { smoke, shots, form, interact, shot, prod };
+
+/** Commands that talk to a deployed site instead of booting one locally. */
+const REMOTE = new Set(["prod"]);
 
 async function main() {
   if (cmd === "help" || cmd === "--help") {
     log(
       [
-        "commands: smoke | shots | form | interact | shot <route> <file> | all",
-        "flags:    --dev --port=N --keep --headed --out=DIR",
+        "local:  smoke | shots | form | interact | shot <route> <file> | all",
+        "remote: prod [url]        check the deployed site (no local server)",
+        "flags:  --dev --port=N --keep --headed --out=DIR --url=URL",
       ].join("\n"),
     );
     return;
@@ -492,13 +635,19 @@ async function main() {
 
   if (cmd === "shots" || cmd === "all") await rm(OUT, { recursive: true, force: true });
 
-  await startServer();
+  // `all` never includes a remote command, so this is a single-command test.
+  const remote = REMOTE.has(cmd);
+  if (remote) BASE = PROD_URL;
+  else await startServer();
+
   try {
     await withBrowser(async (browser) => {
       for (const c of toRun) await COMMANDS[c](browser);
     });
   } finally {
-    if (!KEEP) stopServer();
+    if (remote) {
+      /* nothing to tear down */
+    } else if (!KEEP) stopServer();
     else log(`\n→ --keep: server still running at ${BASE} (kill it yourself)`);
   }
 
