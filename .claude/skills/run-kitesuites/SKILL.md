@@ -177,6 +177,40 @@ tag's *next sibling*. So the script element must be appended into the
 container you want the widget in. Loading it via `next/script`, or from
 `<head>`, renders nothing at all and fails silently.
 
+## Site icon
+
+The kite-and-waves mark from `public/images/logo-*.png`, redrawn as vectors —
+the source PNGs are only 200–250 px, so tracing them gives a blurry icon.
+Three files, all picked up by Next's `app/` metadata conventions:
+
+| File | Serves |
+|---|---|
+| `app/icon.svg` | `<link rel="icon" type="image/svg+xml">` — every modern browser |
+| `app/favicon.ico` | legacy fallback, 16 · 32 · 48 |
+| `app/apple-icon.png` | 180 px iOS home screen |
+
+**Only `app/icon.svg` is hand-edited.** The other two are generated:
+
+```bash
+python3 tools/icons/build.py     # rewrites favicon.ico and apple-icon.png
+```
+
+Two things about that script are not obvious:
+
+- **The 16 px entry is a different drawing**, `tools/icons/favicon-16.svg`. The
+  full mark's three waves sit 7 units apart on a 64-unit grid; at 16 px that is
+  under 2 px each and they resolve into a grey checkerboard. The 16 px variant
+  scales the kite up and drops to a single thick wave.
+- **QuickLook ignores `rx` on a `<rect>`.** The script rasterises with
+  `qlmanage`, so it strips the rounded corners from the SVG first and re-applies
+  them as an antialiased alpha mask. Browsers render the `rx` correctly — do not
+  "fix" the SVG to match a QuickLook preview. `apple-icon.png` is deliberately
+  left square: iOS applies its own squircle mask, and pre-rounded corners come
+  out black.
+
+The script is macOS-only (`qlmanage` + `sips`), which is why the outputs are
+committed rather than built.
+
 ## Where to change what
 
 | Change | File |
@@ -192,6 +226,7 @@ container you want the widget in. Loading it via `next/script`, or from
 | Lead validation / age gate | `lib/actions/leads.ts` |
 | Colours / fonts | `app/globals.css` (`@theme` block) |
 | Lead delivery | `app/[locale]/contact/actions.ts` |
+| Site icon | `app/icon.svg` — then `python3 tools/icons/build.py` |
 
 ## Contact form
 
