@@ -45,7 +45,7 @@ const KEEP = Boolean(flag("keep", false));
 const HEADED = Boolean(flag("headed", false));
 /** `prod --form` submits the live contact form — sends a real Telegram message. */
 const FORM = Boolean(flag("form", false));
-/** `prod --lead` submits the live gift form — writes a REAL row to the sheet. */
+/** `prod --lead` submits the live gift form — writes a REAL record to Airtable. */
 const LEAD = Boolean(flag("lead", false));
 const OUT = path.resolve(ROOT, String(flag("out", ".claude/screenshots")));
 
@@ -468,7 +468,7 @@ async function interact(browser) {
  * Lead capture: the inline section form, the age gate, and the modal's
  * show-once behaviour.
  *
- * Without GOOGLE_* credentials the action returns {ok:false,error:"config"}
+ * Without AIRTABLE_* credentials the action returns {ok:false,error:"config"}
  * and the UI shows the generic error — that is treated as a pass here, the
  * same way `form` treats missing Telegram vars, because it still proves the
  * whole client → server-action path runs.
@@ -533,23 +533,31 @@ async function lead(browser) {
 
     if (stored === "false") {
       // The visitor sees success either way — that is deliberate. But a lead
-      // that never reached the spreadsheet is a silent data-loss bug, so the
-      // driver must not treat it as a pass.
+      // that never reached Airtable is a silent data-loss bug, so the driver
+      // must not treat it as a pass.
       fail(
-        `lead accepted (code ${code}) but the Sheets write FAILED — the row is ` +
-          `not in the spreadsheet. Almost always: the sheet has not been shared ` +
-          `with GOOGLE_SERVICE_ACCOUNT_EMAIL as Editor (403). Check the server ` +
-          `log for "[leads] Sheets write failed".`,
+        `lead accepted (code ${code}) but the Airtable write FAILED — the ` +
+          `record is not in the base. Check the server log for ` +
+          `"[leads] Airtable write failed"; it prints the status and body, ` +
+          `and the three causes are told apart like this:\n` +
+          `      403 INVALID_PERMISSIONS_OR_MODEL_NOT_FOUND, but reads work ` +
+          `-> the token is missing the data.records:write scope. Reads and ` +
+          `writes are separate scopes, so a lookup can succeed while every ` +
+          `create 403s. Edit the token in place; no need to regenerate it.\n` +
+          `      403 on reads too -> the base was never added under "Access" ` +
+          `on the token. Scopes are not access.\n` +
+          `      422 UNKNOWN_FIELD_NAME -> a field in the Leads table was ` +
+          `renamed and no longer matches lib/airtable.ts.`,
       );
     } else {
-      pass(`lead stored in the sheet, gift code issued: ${code}`);
+      pass(`lead stored in Airtable, gift code issued: ${code}`);
     }
   } else {
     const msg = (await form.getByTestId("lead-error").textContent())?.trim();
     notes.push(
       `lead form reached the server action and returned an error ("${msg}"). ` +
-        `Without GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_PRIVATE_KEY / LEADS_SHEET_ID ` +
-        `this is the expected local outcome (leads.ts logs "[leads] Missing GOOGLE_...").`,
+        `Without AIRTABLE_TOKEN / AIRTABLE_BASE_ID this is the expected local ` +
+        `outcome (leads.ts logs "[leads] Missing AIRTABLE_...").`,
     );
     pass("lead form submitted; server action responded (see note below)");
   }
@@ -757,7 +765,7 @@ async function prod(browser) {
   }
 
   // Opt-in: sign up for the gift on the live site. Off by default because it
-  // writes a REAL row to the production leads spreadsheet.
+  // writes a REAL record to the production leads base.
   if (LEAD) {
     log("\n-- prod --lead: submitting the live gift form --");
     const g = await ctx.newPage();
@@ -781,7 +789,18 @@ async function prod(browser) {
     const ok = await section.getByTestId("lead-success").count();
     if (!ok) {
       const msg = (await gform.getByTestId("lead-error").textContent())?.trim();
-      fail(`gift signup failed in production ("${msg}") — check the GOOGLE_* vars are set AND that the deployment was rebuilt after setting them`);
+      fail(
+        `gift signup failed in production ("${msg}") — no success panel at ` +
+          `all, which is {ok:false,error:"config"} rather than a failed ` +
+          `write. Three causes, in the order they actually happen:\n` +
+          `      1. The deployed commit predates the Airtable migration and ` +
+          `still expects the GOOGLE_* vars. Check lib/airtable.ts exists in ` +
+          `the deployed commit — an uncommitted migration deploys nothing.\n` +
+          `      2. AIRTABLE_TOKEN / AIRTABLE_BASE_ID are not set on this ` +
+          `deployment.\n` +
+          `      3. They were set but the deployment was never rebuilt — env ` +
+          `changes do not reach an existing build.`,
+      );
     } else {
       const stored = await section
         .getByTestId("lead-success")
@@ -789,12 +808,12 @@ async function prod(browser) {
       const code = (await section.getByTestId("lead-code").textContent())?.trim();
       if (stored === "false") {
         fail(
-          `production lead accepted (code ${code}) but NOT written to the sheet. ` +
-            `The GOOGLE_* vars are missing from this deployment, or the sheet is ` +
-            `not shared with the service account.`,
+          `production lead accepted (code ${code}) but NOT written to Airtable. ` +
+            `The AIRTABLE_* vars are missing from this deployment, or the token ` +
+            `does not have this base under "Access".`,
         );
       } else {
-        pass(`production lead stored in the sheet, code ${code}`);
+        pass(`production lead stored in Airtable, code ${code}`);
       }
     }
     await g.close();
@@ -839,7 +858,7 @@ async function main() {
         "        --form            prod only: submit the live contact form",
         "                          (sends a REAL Telegram message)",
         "        --lead            prod only: submit the live gift form",
-        "                          (writes a REAL row to the leads sheet)",
+        "                          (writes a REAL record to the leads base)",
       ].join("\n"),
     );
     return;

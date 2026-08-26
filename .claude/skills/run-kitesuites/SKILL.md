@@ -1,6 +1,6 @@
 ---
 name: run-kitesuites
-description: Build, run, screenshot and drive the Kite Suites site (Next.js 16 + Tailwind v4, pt/en). Use when asked to run, start, build, serve, test, screenshot, or verify a change in the Kite Suites app — including checking a page renders, the contact form works, the locale switcher works, the Windguru wind forecast loads, the gift/lead signup stores to Google Sheets, or the WhatsApp CTAs point at the right number.
+description: Build, run, screenshot and drive the Kite Suites site (Next.js 16 + Tailwind v4, pt/en). Use when asked to run, start, build, serve, test, screenshot, or verify a change in the Kite Suites app — including checking a page renders, the contact form works, the locale switcher works, the Windguru wind forecast loads, the gift/lead signup stores to Airtable, or the WhatsApp CTAs point at the right number.
 ---
 
 # Run Kite Suites
@@ -222,7 +222,7 @@ committed rather than built.
 | Wind forecast spot / units | `components/WindWidget.tsx` (`SPOT_ID`, `widgetSrc`) |
 | Rooms | `suitesPage.items` in both dictionaries |
 | Gift offer copy / benefits | `gift` in both dictionaries |
-| Lead storage (sheet columns, code format) | `lib/sheets.ts` |
+| Lead storage (Airtable fields, code format) | `lib/airtable.ts` |
 | Lead validation / age gate | `lib/actions/leads.ts` |
 | Colours / fonts | `app/globals.css` (`@theme` block) |
 | Lead delivery | `app/[locale]/contact/actions.ts` |
@@ -344,31 +344,54 @@ Two surfaces, one form (`components/LeadForm.tsx`), one server action
 - `components/GiftModal.tsx` — native `<dialog>`, shown at most once per
   visitor.
 
-A signup writes a row to a Google Sheet (`lib/sheets.ts`) and pings Telegram.
-Needs `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `LEADS_SHEET_ID`
-(see `.env.local`, which documents the whole setup). Without them the action
-returns `{ok:false,error:"config"}` and logs `[leads] Missing GOOGLE_...` —
-`driver.mjs lead` treats that as a pass, the same way `form` handles missing
-Telegram vars.
+A signup creates a record in Airtable (`lib/airtable.ts`) and pings Telegram.
+Needs `AIRTABLE_TOKEN`, `AIRTABLE_BASE_ID` (see `.env.local`, which documents
+the whole setup). Without them the action returns `{ok:false,error:"config"}`
+and logs `[leads] Missing AIRTABLE_...` — `driver.mjs lead` treats that as a
+pass, the same way `form` handles missing Telegram vars.
 
-Setup gotchas, both of which cost time here:
+The table must be named exactly `Leads`, with these fields — the names are the
+API contract, so renaming one in the Airtable UI breaks the write with a 422:
 
-- **A service account, not an API key.** Both live under "Credentials" and the
-  console will happily restrict an API key to the Sheets API — but an API key
-  can only read *public* sheets and can never write. You need
-  `client_email` + `private_key` from the service account's downloaded JSON.
-  `lib/sheets.ts` now detects the wrong shape and says so.
-- **Share the spreadsheet with the service-account address as Editor**, and
-  name the tab exactly `Leads`. Not sharing gives a 403 that looks like a bad
-  key; a wrong tab name gives `Unable to parse range: Leads!A:I`. A wrong
-  spreadsheet id gives 404 — so 403 means "exists, not shared".
+| Field | Type |
+|---|---|
+| `Name` | Single line text (primary) |
+| `Phone` | Single line text |
+| `Email` | Email — the dedupe key |
+| `Birth Date` | Date |
+| `Code` | Single line text |
+| `Locale` | Single select: `pt`, `en` |
+| `Source` | Single select: `section`, `modal` |
+| `Consent` | Checkbox |
 
-**The sheet is never allowed to cost a lead.** If the Sheets write throws, the
+A `Created` field is optional: Airtable stamps every record with a `createdTime`
+that the API returns whether or not the field exists, so nothing is lost by
+leaving it out. It cannot be created through the API — add it in the UI if you
+want the timestamp visible in the grid.
+
+The base is `appIGpbpzwmw6YFXU` ([Kite Suites → Leads](https://airtable.com/appIGpbpzwmw6YFXU/tblfzMANRV6yTB0UA)).
+
+Setup gotchas, all three of which cost time:
+
+- **Scopes are not access.** A Personal Access Token needs
+  `data.records:read` + `data.records:write` *and* the base listed under
+  "Access". Granting every scope but no base still 403s, which reads exactly
+  like a bad token.
+- **`app…`, not `tbl…`.** The base id, table id and view id all sit in the same
+  URL and all look alike. Only the first (`app…`) is `AIRTABLE_BASE_ID`; a
+  table id gives a 404 that reads as if the base does not exist.
+  `lib/airtable.ts` detects the wrong prefix and says so.
+- **A PAT, not a legacy API key.** Old docs and screenshots show `key…` user
+  API keys; they were deprecated and now fail with a flat 401. Tokens start
+  with `pat`.
+
+**Storage is never allowed to cost a lead.** If the Airtable write throws, the
 visitor still gets their code and the Telegram alert is prefixed
-`⚠️ NÃO gravado na planilha` so it can be entered by hand.
+`⚠️ NÃO gravado no Airtable` so it can be entered by hand.
 
 **Returning emails get their original code back**, not an error and not a
-second row.
+second record. The lookup is a server-side `filterByFormula` on `Email`, so it
+does not get slower as the base grows.
 
 ### Modal rules — do not "simplify" these away
 
@@ -389,7 +412,7 @@ The modal is suppressed when any of these hold:
 
 Full birth date is collected for birthday campaigns, so the form is 18+ and
 `leads.ts` re-checks server-side (`MIN_AGE`). Client-side validation is not
-the gate — under-18 data must never reach the sheet. `driver.mjs lead`
+the gate — under-18 data must never reach Airtable. `driver.mjs lead`
 asserts a 10-year-old is rejected.
 
 ## Commit identity
@@ -425,9 +448,12 @@ Vercel. `vercel.json` pins `"framework": "nextjs"` — if the dashboard preset
 ever drifts to "Other", builds finish in ~14s with `Builds: . [0ms]` and every
 route 404s from the edge. Verify with `vercel inspect <deployment-url>`.
 
-Env vars needed in production: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`. They
-live only in a gitignored `.env.local` locally, so they must be set in the
-dashboard separately or the production contact form fails closed.
+Env vars needed in production: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`,
+`AIRTABLE_TOKEN`, `AIRTABLE_BASE_ID`. They live only in a gitignored
+`.env.local` locally, so they must be set in the dashboard separately — and the
+deployment **rebuilt afterwards**, since env changes do not reach an existing
+build. Otherwise the contact form fails closed and gift signups reach the
+visitor but never reach the base.
 
 Verify a deploy with `driver.mjs prod` (see above).
 

@@ -558,7 +558,7 @@ export const pt: Dictionary = {
         paragraphs: [
           "Ao pedir o seu presente, recolhemos nome, celular, e-mail e data de nascimento. A data de nascimento serve exclusivamente para lhe enviarmos um mimo no mês do seu aniversário.",
           "A base legal é o seu consentimento, dado ao marcar a caixa no formulário. Pode retirá-lo a qualquer momento pelo WhatsApp +55 22 99988-6066, e deixaremos de lhe enviar comunicações.",
-          "Estes cadastros são guardados numa planilha do Google (Google LLC, na qualidade de operador) à qual apenas a nossa equipa tem acesso, e conservados enquanto mantiver o consentimento.",
+          "Estes cadastros são guardados no Airtable (Airtable Inc., na qualidade de operador), a que apenas a nossa equipa tem acesso, e conservados enquanto mantiver o consentimento.",
           "O cadastro é destinado a maiores de 18 anos. Não recolhemos intencionalmente dados de menores de idade.",
         ],
       },

@@ -17,6 +17,7 @@ Vercel.
 | Fonts | `next/font/google` — Fraunces (display), Inter (body) |
 | Analytics | `@vercel/analytics`, cookieless |
 | Forms | React 19 `useState` + Server Action → Telegram bot |
+| Leads | Server Action → Airtable REST API (`lib/airtable.ts`) |
 | Hosting | Vercel |
 
 No UI component library, no state management, no CMS, no database. Copy lives
@@ -68,11 +69,19 @@ public/images/         property photography and brand marks
 ```
 TELEGRAM_BOT_TOKEN=   # @BotFather
 TELEGRAM_CHAT_ID=     # result[].message.chat.id from getUpdates
+AIRTABLE_TOKEN=       # PAT from airtable.com/create/tokens (starts with pat)
+AIRTABLE_BASE_ID=     # first id in the base URL (starts with app)
 ```
 
-Without these the contact form validates and reaches the server action, then
-returns a generic error — by design, and logged as
+Without the Telegram pair the contact form validates and reaches the server
+action, then returns a generic error — by design, and logged as
 `[contact] Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID`.
+
+Without the Airtable pair the gift signup does the same, logging
+`[leads] Missing AIRTABLE_...`. With them set but failing, the visitor still
+gets their gift code and Telegram carries the lead instead — storage is never
+allowed to cost a lead. See the `run-kitesuites` skill for the required `Leads`
+table schema.
 
 ## Content provenance
 

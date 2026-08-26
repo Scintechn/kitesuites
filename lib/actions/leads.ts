@@ -1,11 +1,11 @@
 "use server";
 
 import {
+  airtableConfigured,
   appendLead,
   findExistingCode,
   giftCode,
-  sheetsConfigured,
-} from "@/lib/sheets";
+} from "@/lib/airtable";
 
 export type LeadResult =
   | { ok: true; code: string; returning: boolean; stored: boolean }
@@ -109,15 +109,13 @@ export async function submitLead(formData: FormData): Promise<LeadResult> {
     : "section";
   const locale = localeRaw === "en" ? "en" : "pt";
 
-  if (!sheetsConfigured()) {
-    console.error(
-      "[leads] Missing GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_PRIVATE_KEY / LEADS_SHEET_ID",
-    );
+  if (!airtableConfigured()) {
+    console.error("[leads] Missing AIRTABLE_TOKEN / AIRTABLE_BASE_ID");
     return { ok: false, error: "config" };
   }
 
-  // A returning visitor gets their original code back — no duplicate row, no
-  // error, and the same gift they were promised the first time.
+  // A returning visitor gets their original code back — no duplicate record,
+  // no error, and the same gift they were promised the first time.
   let returning = false;
   let code = giftCode();
   let stored = true;
@@ -131,25 +129,25 @@ export async function submitLead(formData: FormData): Promise<LeadResult> {
       await appendLead({ name, phone, email, birthDate, code, locale, source });
     }
   } catch (err) {
-    // The spreadsheet is not allowed to cost us the lead. Keep the promise to
-    // the visitor, shout in the logs, and flag the alert for manual entry.
+    // Storage is not allowed to cost us the lead. Keep the promise to the
+    // visitor, shout in the logs, and flag the alert for manual entry.
     stored = false;
     console.error(
-      "[leads] Sheets write failed, falling back to Telegram:",
+      "[leads] Airtable write failed, falling back to Telegram:",
       err instanceof Error ? err.message : err,
     );
   }
 
   if (!returning) {
     await notifyTelegram(
-      `<b>${stored ? "Novo lead" : "⚠️ Novo lead — NÃO gravado na planilha"}</b>\n\n` +
+      `<b>${stored ? "Novo lead" : "⚠️ Novo lead — NÃO gravado no Airtable"}</b>\n\n` +
         `<b>Nome:</b> ${escapeHtml(name)}\n` +
         `<b>Telefone:</b> ${escapeHtml(phone)}\n` +
         `<b>E-mail:</b> ${escapeHtml(email)}\n` +
         `<b>Nascimento:</b> ${escapeHtml(birthDate)}\n` +
         `<b>Código:</b> ${escapeHtml(code)}\n` +
         `<b>Origem:</b> ${escapeHtml(source)} · ${escapeHtml(locale)}` +
-        (stored ? "" : "\n\n<i>Grave este lead manualmente na planilha.</i>"),
+        (stored ? "" : "\n\n<i>Grave este lead manualmente no Airtable.</i>"),
     );
   }
 

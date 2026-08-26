@@ -553,7 +553,7 @@ export const en: Dictionary = {
         paragraphs: [
           "When you claim your gift we collect your name, mobile number, email and date of birth. The date of birth is used solely to send you a treat in your birthday month.",
           "The legal basis is your consent, given by ticking the box on the form. You can withdraw it at any time on WhatsApp +55 22 99988-6066 and we will stop sending you communications.",
-          "These sign-ups are stored in a Google Sheet (Google LLC, acting as processor) accessible only to our team, and kept for as long as your consent stands.",
+          "These sign-ups are stored in Airtable (Airtable Inc., acting as processor), accessible only to our team, and kept for as long as your consent stands.",
           "Sign-up is for people aged 18 and over. We do not knowingly collect data from minors.",
         ],
       },
