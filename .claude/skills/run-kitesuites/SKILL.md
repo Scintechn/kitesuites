@@ -458,7 +458,20 @@ visitor but never reach the base.
 Verify a deploy with `driver.mjs prod` (see above).
 
 **The domain has not moved yet.** `business.siteUrl` is
-`https://kitesuites.com.br`, which still serves the old site, so canonical
-URLs, OG tags and `sitemap.xml` all advertise a host where this content is not
-published. That resolves itself when DNS points at Vercel — until then, don't
-submit the sitemap to Search Console.
+`https://kitesuites.com.br`, which still serves the OLD site, hosted at
+Locaweb. That one constant feeds `app/robots.ts`, `app/sitemap.ts`,
+`metadataBase` and the OG/JSON-LD tags in `app/[locale]/layout.tsx`, so the
+deployment advertises a canonical host where this content is not published.
+
+`driver.mjs prod` notes this on every run. **The note is expected — do not
+"fix" it.** Pointing `siteUrl` at the vercel.app domain would only have to be
+reverted at cutover; the constant is already the value it should end on, which
+is why there is no code change to make here.
+
+The cutover is a DNS change on the Locaweb side, and it is the user's call.
+Once they confirm it is done:
+
+1. `driver.mjs prod https://kitesuites.com.br` — the note should disappear by
+   itself.
+2. Check `/sitemap.xml` and `/robots.txt` are served by Vercel, not Locaweb.
+3. Only then submit the sitemap to Search Console.
