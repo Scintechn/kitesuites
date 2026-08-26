@@ -626,6 +626,7 @@ export const pt: Dictionary = {
 
   footer: {
     rights: "Todos os direitos reservados.",
+    developedBy: "Desenvolvido por",
     navTitle: "Navegação",
     contactTitle: "Contato",
     privacy: "Política de privacidade",

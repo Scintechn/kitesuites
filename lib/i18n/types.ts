@@ -206,6 +206,8 @@ export type Dictionary = {
   };
   footer: {
     rights: string;
+    /** Precedes business.developer.name — the entity name is not translated. */
+    developedBy: string;
     navTitle: string;
     contactTitle: string;
     privacy: string;

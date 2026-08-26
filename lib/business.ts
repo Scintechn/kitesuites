@@ -38,6 +38,19 @@ export const business = {
     instagram: "https://www.instagram.com/kite_suites",
   },
 
+  /**
+   * Who built the site. The one entry here not transcribed from
+   * kitesuites.com.br, because it is a fact about the site rather than about
+   * the hotel. The legal entity name lives here and not in the dictionaries:
+   * a registered company name is not translated, so a copy in pt.ts and
+   * another in en.ts would be two homes for one fact, free to drift apart.
+   */
+  developer: {
+    name: "Scintechn",
+    legalName: "Scint Tecnologia Serviços Ltda",
+    url: "https://www.scintechn.com",
+  },
+
   mapDirectionsUrl:
     "https://www.google.com/maps/dir/?api=1&destination=" +
     encodeURIComponent(

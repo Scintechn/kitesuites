@@ -94,9 +94,23 @@ export function Footer({
 
       <div className="border-t border-white/10">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 py-6 text-xs text-brand-200 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <p>
-            © {year} {business.legalName}. {t.rights}
-          </p>
+          <div>
+            <p>
+              © {year} {business.legalName}. {t.rights}
+            </p>
+            <p className="mt-1.5">
+              {t.developedBy}{" "}
+              <a
+                href={business.developer.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-brand-100 hover:text-white"
+              >
+                {business.developer.name}
+              </a>{" "}
+              — {business.developer.legalName}
+            </p>
+          </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             <Link href={`/${locale}/privacy-policy`} className="hover:text-white">
               {t.privacy}
